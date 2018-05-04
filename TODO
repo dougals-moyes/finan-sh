@@ -1,0 +1,10 @@
+* Add real balance sheet and income statement reports
+* Implement "delete"
+* Implement "unpost all" to fix journal/posting errors
+* Check for spellchecker type (currently uses ispell)
+* Add feature for external programs to easily post data into the journal
+  This was something I intended to do in 2003, but there wasn't an 
+  immediate need for it, so it got shelved.
+* Update comments, clean up code 
+* Make a real man page and docs
+
