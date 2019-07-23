@@ -1,4 +1,4 @@
-#finan-sh
+# finan-sh
 
 This is largely the same code I wrote back in 2003, mainly
 to see if it was possible to write usable software in Bourne
