@@ -26,7 +26,7 @@ Once a journal has been loaded, you will be presented with a simple menu:
  ***   **** **** *      *   *  ** * *     
  Using test-data journal
     a Add entries      aac add accounts 
-    d Delete entries   al list accounts
+                       al list accounts
     l list entries 
 
     p post (required to show balances) 
@@ -42,7 +42,6 @@ Type in the letter that corresponds to the desired function, and press enter:
 + al List accounts already defined
 + l list journal entries
 + a adds a journal entry
-+ d delete entries (doesn't do anything yet)
 + p post -- this will post all journal entries not yet posed, and will allow for account balances
 to be calculated
 + b get the balance of a specific account number

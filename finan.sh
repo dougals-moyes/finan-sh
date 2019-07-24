@@ -1,16 +1,7 @@
 #!/bin/sh
-# Journal takes one required parameter, and other optional for batch
-# or external processing.
-# <journal file> [command] [options]
-# command
-# post		post journal entries
-# addentry	add an entry. reads commands from stdin. Commands are
-#		as follows:
-#		STRT <date, YYYYmmDD>
-#		DEBT <account#> <amount>
-#		CRED <account#> <amount>
-#		DESC <description>
-#		DONE	
+# finan.sh takes one parameter: The location of the journal file
+# or journal directory. Typically you will want to specify a directory
+# rather than the journal file it's self.
 ##################################################
 
 if [ -n "`echo '\c'`" ]
@@ -49,16 +40,6 @@ printbar(){
 	echo ""
 }
 
-
-#cat << EOF
-#  **** **** *   * **** ****    *   *         * **** *  * ****  *   *   *   *    
-# *     *    **  * *    *   *  * *  *         * *  * *  * *   * **  *  * *  *    
-# *  ** **** * * * **** ****  ***** *         * *  * *  * ****  * * * ***** *    
-# *   * *    *  ** *    * *   *   * *     *   * *  * *  * * *   *  ** *   * *    
-#  **** **** *   * **** *  *  *   * ****   ***  **** **** *  *  *   * *   * **** 
-#Bourne Shell script version $version 
-#
-#EOF
 
 ############
 #  These functions convert a floating point number to fixed point
@@ -455,13 +436,13 @@ then
 fi
 case "$cmd" in
 	pst)
-		post $options ;;
+		post "$dir" $options ;;
 	bpst)
-		batchpost;;
+		batchpost "$dir" ;;
 	forcepd)
-		postdelayed $options ;;
-	bal) balance $options;;
-	listbal) listbal $options;;
+		postdelayed "$dir" $options ;;
+	bal) balance "$dir" $options;;
+	listbal) listbal "$dir" $options;;
 	*)
 		echo Unknown command 
 		;;
@@ -474,21 +455,23 @@ esac
 # Posts an entry.
 # <accnt> <date.ref> <type> <amnt> <source journal>
 post(){
+	dir="$1"
+	shift
 	acc="$dir/$1"
 	type="$3"
 	val="$4"
 	ref="$2"
 	j="`basename "$5"`"
 	js="`echo "$j"|colrm 16`"
-	tmp="$acc.tmp"
-	if [ "`checklock "$tmp"`" = "FAIL" ]
+	post_tmp="$acc.tmp"
+	if [ "`checklock "$post_tmp"`" = "FAIL" ]
 	then
 		echo "Can't establish lock. Terminating"
 		return 1
 	fi
-	touch "$tmp"
-	printf "$ref %-15s $type %s \n" "$js" $val |cat - "$acc" |sort >>"$tmp"
-	mv "$tmp" "$acc"
+	touch "$post_tmp"
+	printf "$ref %-15s $type %s \n" "$js" $val |cat - "$acc" |sort >>"$post_tmp"
+	mv "$post_tmp" "$acc"
 }
 ###################################
 # 		USED FOR BATCH POSTINGS ONLY!!!
@@ -501,13 +484,13 @@ post(){
 # temporary file.
 ####################################
 delayedpost(){
-	tmp="$dir/$1.tmp.$6"
+	dp_tmp="$dir/$1.tmp.$6"
 	type="$3"
 	val="$4"
 	ref="$2"
 	j="`basename "$5"`"
 	js="`echo "$j"|colrm 16`"
-	printf "$ref %-15s $type %s\n" "$js" $val >>"$tmp"
+	printf "$ref %-15s $type %s\n" "$js" $val >>"$dp_tmp"
 
 }
 ######################
@@ -557,6 +540,8 @@ batchpost()
 # as negative numbers.
 #format: [-fp] <account>  [end date] 
 balance() {
+	dir="$1"
+	shift
 	file="$dir/"$1
 	stopdate="99990000"
 	if [ "$1" = "-fp" ]
@@ -610,10 +595,17 @@ balance() {
 # listbal()
 #################
 listbal(){
+	dir="$1"
+	shift
+	if [ -z "`ls $dir`" ]
+	then
+		return
+	fi
+
 	for account in "$dir"/* 
 	do
 		acc=`basename "$account"`
-		bal=`balance $acc $1`
+		bal=`balance "$dir" $acc $1`
 		name=`coa_manager $basedir/COA lN $acc`
 		parent=`coa_manager $basedir/COA pr $acc`
 		if [ -n "$parent" ]
@@ -843,7 +835,7 @@ cat << EOF
  ***   **** **** *      *   *  ** * *     
  Using $jfiledisplay journal
     a Add entries      aac add accounts 
-    d Delete entries   al list accounts
+                       al list accounts
     l list entries 
 
     p post (required to show balances) 
@@ -860,7 +852,8 @@ case "$cmd" in
 	aac) addAccount;;
 	al)  accountbrowser;;
 	a) addentries "$1";;
-	d) echo "** UNIMPLEMENTED **";;
+	d)  #delete entries... 
+		echo "** UNIMPLEMENTED **";;
 	l) browser ;;
 	e) return;;
 	p) post;;
@@ -890,9 +883,9 @@ done
 #########################################
 post() {
 	postfile="$jfile.posting"
-	tmp="$jfile.tmp"
+	j_tmp="$jfile.tmp"
 	jname="`basename $jfile`"
-	if  ! checklock "$tmp"
+	if  ! checklock "$j_tmp"
 	then
 		echo "Can't post while file is locked"
 		return 1
@@ -905,7 +898,7 @@ post() {
 			if [ "`getpoststat "$line"`" = "." ]
 			then
 				echo $es "*\c"
-				setpost "$line" \* >>"$tmp"
+				setpost "$line" \* >>"$j_tmp"
 				accnt=`getaccnt "$line"`
 				amnt=`getamnt "$line"`
 				type=`gettranstype "$line"`
@@ -915,7 +908,7 @@ post() {
 				   $type $amnt $jname >>"$postfile"
 			else
 				echo $es ".\c"
-				echo "$line" >>"$tmp"
+				echo "$line" >>"$j_tmp"
 			fi
 			read line
 		done
@@ -924,17 +917,17 @@ post() {
 	if [ ! -f "$postfile" ]
 	then
 		echo "No accounts were posted."
-		rm "$tmp"
+		rm "$j_tmp"
 	else
 		if account_helperapp "$jbasedir" bpst < "$postfile"
 		then	
-			mv "$tmp" "$jfile"
+			mv "$j_tmp" "$jfile"
 		else
 			echo '*** UNKNOWN FAILURE ***'
 			echo "Posting aborted."
 			echo "Account files might be corrupted."
 			pause
-			rm "$tmp"
+			rm "$j_tmp"
 		fi
 			
 			rm "$postfile"
