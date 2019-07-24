@@ -971,7 +971,7 @@ EOF
 	read parent
 
 	account=$((type*1000+last3))
-	echo "Checking for excising accounts..."
+	echo "Checking for existing accounts..."
 	if grep -e "^$account" "$COAf"
 	then
 		echo "***ERROR: Account exists"
