@@ -1,17 +1,19 @@
 # finan-sh
 
 This is largely the same code I wrote back in 2003, mainly
-to see if it was possible to write usable software in Bourne
-shell scripts, and also because I was a put off by the fact
+to see if it was possible to write useful software in the Bourne
+shell, and also because I was a put off by the fact
 GnuCash data files were incompatible between new versions.  I had
-intended later to rewrite this in other languages. I have
-released this as it may prove useful to others, or for those that
-are curious about how such a system can be made.
+intended later to rewrite this in other languages. This was uploaded
+to GitHub in 2018 for others that might find it useful, or who are
+curious how a double-entry accounting package could be implemented
+using such a limited language.
 
-**finan.sh** is a double-entry accounting system and general journal. It takes
+**[finan.sh](https://raw.githubusercontent.com/douglas-moyes/finan-sh/master/finan.sh)** is a 
+double-entry accounting system and general journal. It takes
 one command line option: the directory where the journal file(s) are located. 
 
-> finan.sh Path/To/JournalFilesDir
+> finan.sh *Path/To/JournalFilesDir*
 
 If the specified path doesn't exist, it will offer to create one for you.
 
@@ -61,16 +63,21 @@ revenue and expense accounts are closed out))
 4. 4000's revenue (income)
 5. 5000's expenses
 
-The script understands the concept of sub-accounts. **5210.5200** means account 5210 is the sub
-account of 5200. For example:
+The script understands the concept of sub-accounts. **5210.5200** means account **5210** is the sub
+account of **5200**. For example:
 ```
 5750 Taxes
 5751.5750 State Income Tax
 5752.5750 Federal Income Tax
 5759.5750 Other Taxes
 ```
-You could edit these accounts manually by going to $DIR/COA, however changing the account 
-numbers after they have been used would be a very bad idea. 
+
+The ```aac``` command from the *Journal* menu will allow you to add accounts. When using this command, you'll
+be prompted for the account type (1-5), the last three digits of the account number, and for the number
+associated with the parent account (if any).
+
+You could edit these accounts manually by going to ```$DIR/COA```, however changing the account 
+numbers after they have been used in a journal entry would be a very bad idea. 
 
 The journal only understands account numbers, but it will give you 
 the opportunity to pull up an account list in case you forget the 
