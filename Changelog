@@ -2,3 +2,5 @@
 
 2018-05-04 Combined shell scripts into one finain.sh file, and updated
 some of the code to meet 2018 standards.
+
+2018-07-23 Fixed bugs from merging shell scripts. Updated docs.
